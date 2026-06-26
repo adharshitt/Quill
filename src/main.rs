@@ -142,7 +142,7 @@ fn main() {
 
     println!("\n");
     
-    fn print_task_diagnostics(task: &Task) {
+    fn print_task_diagnostics(task: &allocator::AllocationTask) {
     // 1. The task allcoaation
     println!("{:=^60}", " Quill | Task  Allocation");
 
@@ -179,6 +179,8 @@ fn main() {
     // 5. Footer
     println!("{:=^60}", "");
    }
+
+    print_task_diagnostics(&task);
 
     println!("\nQuill | Launching SVT-AV1 Transcoding Process...");
     match transcode::run_ffmpeg_transcode(&input_path, &output_path, &task) {

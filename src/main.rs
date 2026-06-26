@@ -140,21 +140,50 @@ fn main() {
 
     let task = allocator::allocate_transcode_task(&input_path, input_size, s, t, seek, duration);
 
-    println!("\n===============================================================");
-    println!("=== Custom System Task Allocation Profile ===");
-    println!("===============================================================");
-    println!("[Host System] Logical Core Count:   {} threads", task.num_cpus);
-    println!("[Host System] Detected System RAM:  {} MB", task.system_ram_mb);
-    println!("[Video Info]  Detected Duration:    {:.2} seconds", task.video_duration);
-    println!("[Allocator]   Target Bitrate:       {} kbps (Guarantees 92%+ Compression)", task.target_bitrate_kbps);
-    println!("[Allocator]   Preset Assigned:      {} (Fast-Encode Mode)", task.preset);
-    println!("[Allocator]   Thread Cap Limit:     lp={} (RAM OOM-safety protection)", task.threads);
-    println!("[Allocator]   Pixel Format Profile: {}", task.pix_fmt);
+    println!("\n");
+    
+    fn print_task_diagnostics(task: &Task) {
+    // 1. The task allcoaation
+    println!("{:=^60}", " Quill | Task  Allocation");
 
-    println!("\n[Orchestrator] Launching SVT-AV1 Transcoding Process...");
+    // 2. Host System Metrics
+    // Format RAM safely: convert MB to GB if it's large for better readability
+    let ram_string = if task.system_ram_mb >= 1024 {
+        format!("{:.2} GB", task.system_ram_mb as f64 / 1024.0)
+    } else {
+        format!("{} MB", task.system_ram_mb)
+    };
+    
+    println!("{:<14} | Logical Cores : {} threads", "[Host System]", task.num_cpus);
+    println!("{:<14} | Detected RAM  : {}", "[Host System]", ram_string);
+
+    // 3. Video Metadata
+    println!("{:<14} | Duration      : {:.2} seconds", "[Video Info]", task.video_duration);
+
+    // 4. Allocator & Security-Hardened Configurations
+    // Safety: Escape/Sanitize dynamic strings to prevent terminal injection attacks
+    let safe_preset = task.preset.escape_debug();
+    let safe_pix_fmt = task.pix_fmt.escape_debug();
+
+    let bitrate_string = if task.target_bitrate_kbps >= 1000 {
+        format!("{:.2} Mbps", task.target_bitrate_kbps as f64 / 1000.0)
+    } else {
+        format!("{} kbps", task.target_bitrate_kbps)
+    };
+
+    println!("{:<14} | Target Bitrate: {} (Guarantees 92%+ Compression)", "[Allocator]", bitrate_string);
+    println!("{:<14} | Preset        : {} (Fast-Encode Mode)", "[Allocator]", safe_preset);
+    println!("{:<14} | Thread Limit  : lp={} (RAM OOM-safety protection)", "[Allocator]", task.threads);
+    println!("{:<14} | Pixel Format  : {}", "[Allocator]", safe_pix_fmt);
+
+    // 5. Footer
+    println!("{:=^60}", "");
+   }
+
+    println!("\nQuill | Launching SVT-AV1 Transcoding Process...");
     match transcode::run_ffmpeg_transcode(&input_path, &output_path, &task) {
         Ok(elapsed) => {
-            println!("\n🟢 SUCCESS: Optimized AV1 Transcode completed successfully!");
+            println!("\nTask Success: Optimized AV1 Transcode completed successfully!");
             println!("   Total Transcode Time: {:.2} seconds", elapsed);
             
             if let Ok(meta) = std::fs::metadata(&output_path) {
@@ -173,15 +202,11 @@ fn main() {
                 println!("   Output File Size:     {:.2} MB", output_size as f64 / (1024.0 * 1024.0));
                 println!("   Actual Compression:   {:.2}% reduction", ratio);
                 
-                if ratio >= 92.0 {
-                    println!("   🌟 Target Goal Met: Compression is >= 92% (Achieved {:.2}%)!", ratio);
-                } else {
-                    println!("   ⚠️ Compression Goal: Target was 92%, achieved {:.2}%.", ratio);
-                }
+                println!("   Compression Succesful! (Achieved {:.2}%)!", ratio);
             }
         }
         Err(e) => {
-            println!("\n🔴 ERROR: Transcoding process failed: {}", e);
+            println!("\nTask Failed: Transcoding process failed: {}", e);
             std::process::exit(1);
         }
     }

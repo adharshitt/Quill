@@ -4,6 +4,7 @@ use std::time::Instant;
 mod telemetry;
 mod allocator;
 mod transcode;
+mod platform;
 
 fn print_usage() {
     println!("Usage: win --input <input_video> --output <output_video> [--seek <seconds>] [--duration <seconds>]");
@@ -138,7 +139,13 @@ fn main() {
     let complexity_score = telemetry::calculate_complexity_index(s, t, l);
     println!("[Forecaster] Telemetry Complexity Index: {:.2}", complexity_score);
 
-    let task = allocator::allocate_transcode_task(&input_path, input_size, s, t, seek, duration);
+    let task = match allocator::allocate_transcode_task(&input_path, input_size, s, t, seek, duration) {
+        Ok(t) => t,
+        Err(e) => {
+            println!("\n🔴 ERROR: {}", e);
+            std::process::exit(1);
+        }
+    };
 
     println!("\n");
     

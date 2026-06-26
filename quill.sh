@@ -2,7 +2,7 @@
 
 INPUT_PATH="$1"
 if [ -z "$INPUT_PATH" ]; then
-    INPUT_PATH=$(whiptail --title "Quill Video Optimizer" --inputbox "Enter the path of the video file to optimize:" 10 60 3>&1 1>&2 2>&3)
+    INPUT_PATH=$(whiptail --title "Quill" --inputbox "Enter the path of the video file to optimize:" 10 60 3>&1 1>&2 2>&3)
     if [ $? -ne 0 ]; then
         echo "Operation canceled by user."
         exit 0
@@ -18,7 +18,7 @@ fi
 
 CHOICE=$(whiptail --title "Select Compression Method" --menu \
 "Choose one of the 5 supported transcoding methods:" 18 75 5 \
-"1" "🆕 Our Optimized Rust Wrapper (10-bit AV1, RAM-safe)" \
+"1" "Quill AD01 (10-bit AV1, RAM-safe)" \
 "2" "Default AV1 (Clean CPU - 4K, lp=4)" \
 "3" "Default H.264 (Normal CPU - 4K)" \
 "4" "Tool-Optimized AV1 (CRF 30 - 4K, lp=4)" \
@@ -59,9 +59,9 @@ if [ ! -z "$DUR_VAL" ]; then
 fi
 
 clear
-echo "==============================================================="
-echo "=== Quill: Launching Transcode Operation ==="
-echo "==============================================================="
+echo ""
+echo " Quill: Launching Transcode Operation "
+echo ""
 
 case "$CHOICE" in
     1)
@@ -104,8 +104,8 @@ STATUS_CODE=$?
 echo ""
 if [ $STATUS_CODE -eq 0 ]; then
     whiptail --title "Transcode Complete" --msgbox "Successfully transcoded file to:\n$OUTPUT_PATH" 12 65
-    echo "🟢 SUCCESS: File transcoded and saved to: $OUTPUT_PATH"
+    echo "Task Completed: File transcoded and saved to: $OUTPUT_PATH"
 else
     whiptail --title "Transcode Failed" --msgbox "Encoding failed. Check terminal output for details." 10 55
-    echo "🔴 ERROR: Transcode failed with exit status $STATUS_CODE"
+    echo "Task Failed: Transcode failed with exit status $STATUS_CODE"
 fi

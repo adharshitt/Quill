@@ -1,7 +1,5 @@
 #!/bin/bash
-# Quill - Interactive TUI Wrapper for AV1/H.264 Video Optimization
 
-# 1. Ask for input file if not provided as a command-line argument
 INPUT_PATH="$1"
 if [ -z "$INPUT_PATH" ]; then
     INPUT_PATH=$(whiptail --title "Quill Video Optimizer" --inputbox "Enter the path of the video file to optimize:" 10 60 3>&1 1>&2 2>&3)
@@ -11,16 +9,13 @@ if [ -z "$INPUT_PATH" ]; then
     fi
 fi
 
-# Trim whitespace
 INPUT_PATH=$(echo "$INPUT_PATH" | xargs)
 
-# Check if input file exists
 if [ ! -f "$INPUT_PATH" ]; then
     whiptail --title "Error" --msgbox "File '$INPUT_PATH' does not exist." 10 50
     exit 1
 fi
 
-# 2. Select the compression method
 CHOICE=$(whiptail --title "Select Compression Method" --menu \
 "Choose one of the 5 supported transcoding methods:" 18 75 5 \
 "1" "🆕 Our Optimized Rust Wrapper (10-bit AV1, RAM-safe)" \
@@ -35,7 +30,6 @@ if [ $? -ne 0 ]; then
     exit 0
 fi
 
-# 3. Ask for optional seek offset
 SEEK_VAL=$(whiptail --title "Optional: Seek Offset" --inputbox "Enter seek offset in seconds (e.g., 10) or leave blank to start from beginning:" 10 60 3>&1 1>&2 2>&3)
 if [ $? -ne 0 ]; then
     echo "Operation canceled by user."
@@ -43,7 +37,6 @@ if [ $? -ne 0 ]; then
 fi
 SEEK_VAL=$(echo "$SEEK_VAL" | xargs)
 
-# 4. Ask for optional duration limit
 DUR_VAL=$(whiptail --title "Optional: Duration Limit" --inputbox "Enter encoding duration in seconds (e.g., 10) or leave blank for full video:" 10 60 3>&1 1>&2 2>&3)
 if [ $? -ne 0 ]; then
     echo "Operation canceled by user."
@@ -51,12 +44,10 @@ if [ $? -ne 0 ]; then
 fi
 DUR_VAL=$(echo "$DUR_VAL" | xargs)
 
-# Resolve directories and base names
 DIR_NAME=$(dirname "$INPUT_PATH")
 BASE_NAME=$(basename "$INPUT_PATH")
 FILE_NAME="${BASE_NAME%.*}"
 
-# Construct FFmpeg options for seek and duration
 SEEK_ARG_FFMPEG=""
 if [ ! -z "$SEEK_VAL" ]; then
     SEEK_ARG_FFMPEG="-ss $SEEK_VAL"

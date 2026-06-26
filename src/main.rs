@@ -98,7 +98,6 @@ fn main() {
         std::process::exit(1);
     }
 
-    // Flag injection vulnerability checks
     if input_path.starts_with('-') || output_path.starts_with('-') {
         println!("Error: File paths cannot start with a hyphen '-' to prevent flag injection.");
         std::process::exit(1);
@@ -139,7 +138,6 @@ fn main() {
     let complexity_score = telemetry::calculate_complexity_index(s, t, l);
     println!("[Forecaster] Telemetry Complexity Index: {:.2}", complexity_score);
 
-    // Run Dynamic Core Allocator System
     let task = allocator::allocate_transcode_task(&input_path, input_size, s, t, seek, duration);
 
     println!("\n===============================================================");
@@ -162,7 +160,6 @@ fn main() {
             if let Ok(meta) = std::fs::metadata(&output_path) {
                 let output_size = meta.len();
                 
-                // Adjust input size calculation proportionally if seek/duration was specified
                 let original_duration = task.original_duration;
                 let proportion = if original_duration > 0.0 {
                     task.video_duration / original_duration

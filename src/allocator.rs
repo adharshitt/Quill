@@ -17,7 +17,6 @@ pub struct AllocationTask {
     pub duration: Option<f64>,
 }
 
-/// Detects the available system RAM in Megabytes by reading /proc/meminfo.
 fn get_system_ram_mb() -> u64 {
     if let Ok(file) = File::open("/proc/meminfo") {
         let reader = BufReader::new(file);
@@ -26,16 +25,15 @@ fn get_system_ram_mb() -> u64 {
                 let parts: Vec<&str> = line.split_whitespace().collect();
                 if parts.len() >= 2 {
                     if let Ok(kb) = parts[1].parse::<u64>() {
-                        return kb / 1024; // Convert to MB
+                        return kb / 1024;
                     }
                 }
             }
         }
     }
-    4096 // Fallback default to 4GB if /proc/meminfo is inaccessible
+    4096
 }
 
-/// Runs ffprobe to dynamically fetch the duration of the input video.
 fn get_video_duration(file_path: &str) -> f64 {
     let output = Command::new("ffprobe")
         .args(&[
@@ -54,7 +52,7 @@ fn get_video_duration(file_path: &str) -> f64 {
             }
         }
     }
-    50.0 // Default fallback duration (similar to mixkit benchmark)
+    50.0
 }
 
 pub fn allocate_transcode_task(
@@ -70,14 +68,9 @@ pub fn allocate_transcode_task(
         .map(|n| n.get())
         .unwrap_or(4);
     
-    // Get actual video duration
     let actual_duration = get_video_duration(input_file_path);
-    
-    // Use custom duration if provided, otherwise actual duration
     let video_duration = duration.unwrap_or(actual_duration);
 
-    // 1. Calculate Target Bitrate to GUARANTEE 92%+ compression ratio.
-    // If transcoding a subset of the video, we scale the target size proportionally.
     let proportion = if actual_duration > 0.0 {
         video_duration / actual_duration
     } else {
@@ -85,26 +78,20 @@ pub fn allocate_transcode_task(
     };
     let target_input_size = input_file_size as f64 * proportion;
 
-    // Target Size = target_input_size * 0.075 (corresponds to a 92.5% compression ratio)
-    // Target Bitrate (bps) = (Target Size * 8) / duration
     let target_bitrate_bps = if video_duration > 0.0 {
         ((target_input_size * 0.075 * 8.0) / video_duration) as u32
     } else {
-        600_000 // Fallback to 600 kbps
+        600_000
     };
     
-    // We cap target bitrate between 350 kbps (low bounds) and 4000 kbps (high bounds)
-    // to ensure quality and compression boundaries without starving 4K resolution files.
     let target_bitrate_kbps = (target_bitrate_bps / 1000).clamp(350, 4000);
 
-    // 2. Select Preset to ensure transcode time is optimized.
     let preset = if num_cpus >= 12 && system_ram_mb >= 6000 {
         "10".to_string()
     } else {
         "12".to_string()
     };
 
-    // 3. Limit threads based on system RAM to prevent OOM termination
     let threads = if system_ram_mb < 2000 {
         "2".to_string()
     } else if system_ram_mb < 4000 {
@@ -113,7 +100,6 @@ pub fn allocate_transcode_task(
         "6".to_string()
     };
 
-    // 4. Quality - 10-bit format is preserved for high visual grade
     let pix_fmt = "yuv420p10le".to_string();
     let crf_or_bitrate = format!("-b:v {}k", target_bitrate_kbps);
 

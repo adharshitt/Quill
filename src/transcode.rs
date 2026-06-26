@@ -12,15 +12,12 @@ pub fn run_ffmpeg_transcode(
         task.threads
     );
     
-    // Split crf_or_bitrate by whitespace to pass as individual args
     let bitrate_parts: Vec<&str> = task.crf_or_bitrate.split_whitespace().collect();
     
     let mut ffmpeg_args = Vec::new();
     
-    // Global flags
     ffmpeg_args.push("-y");
     
-    // Seek argument goes BEFORE input to enable fast input-seeking
     let seek_str = if let Some(s) = task.seek {
         Some(s.to_string())
     } else {
@@ -31,11 +28,9 @@ pub fn run_ffmpeg_transcode(
         ffmpeg_args.push(s);
     }
     
-    // Input file
     ffmpeg_args.push("-i");
     ffmpeg_args.push(input_path);
     
-    // Duration argument goes AFTER input to restrict output duration
     let duration_str = if let Some(d) = task.duration {
         Some(d.to_string())
     } else {
@@ -46,11 +41,9 @@ pub fn run_ffmpeg_transcode(
         ffmpeg_args.push(d);
     }
     
-    // Video codec and parameters
     ffmpeg_args.push("-c:v");
     ffmpeg_args.push("libsvtav1");
     
-    // Add dynamic bitrate flag (-b:v and value)
     for part in &bitrate_parts {
         ffmpeg_args.push(part);
     }
@@ -67,7 +60,6 @@ pub fn run_ffmpeg_transcode(
     ffmpeg_args.push("-c:a");
     ffmpeg_args.push("libopus");
     
-    // Output path
     ffmpeg_args.push(output_path);
 
     println!("Running Command: ffmpeg {}", ffmpeg_args.join(" "));

@@ -7,7 +7,6 @@ pub struct PreAnalysisFeatures {
     pub luma_brightness: f64,
 }
 
-/// Computes 1D Discrete Cosine Transform (DCT) on an 8-float block.
 fn compute_dct(block: &[f64; 8]) -> [f64; 8] {
     let mut dct = [0.0f64; 8];
     let n_f64 = 8.0f64;
@@ -26,8 +25,6 @@ fn compute_dct(block: &[f64; 8]) -> [f64; 8] {
     dct
 }
 
-/// Performs spatial, temporal, and luma extraction over the raw video file.
-/// Optimised to use SEEK operations rather than loading the entire file into memory.
 pub fn extract_features_low_memory(file_path: &str) -> std::io::Result<PreAnalysisFeatures> {
     let mut file = File::open(file_path)?;
     let file_len = file.metadata()?.len();
@@ -40,7 +37,6 @@ pub fn extract_features_low_memory(file_path: &str) -> std::io::Result<PreAnalys
         });
     }
 
-    // Step 1: Luma Brightness analysis over 128 sample points
     let sample_size = 128;
     let step = file_len / sample_size as u64;
     let mut total_luma = 0.0f64;
@@ -53,7 +49,6 @@ pub fn extract_features_low_memory(file_path: &str) -> std::io::Result<PreAnalys
     }
     let luma_brightness = total_luma / sample_size as f64;
 
-    // Step 2: Spatial Energy - compute DCT across 16 separate 8-byte blocks
     let num_blocks = 16;
     let block_stride = file_len / num_blocks as u64;
     let mut spatial_sum = 0.0f64;
@@ -70,14 +65,12 @@ pub fn extract_features_low_memory(file_path: &str) -> std::io::Result<PreAnalys
         
         let dct_coeffs = compute_dct(&block);
         
-        // Sum high frequency coefficients (indices 4 to 7) to quantify fine textures
         for k in 4..8 {
             spatial_sum += dct_coeffs[k].abs();
         }
     }
     let spatial_energy = spatial_sum / (num_blocks as f64 * 4.0);
 
-    // Step 3: Temporal Energy - compute frame difference variance across 8 strides
     let num_strides = 8;
     let stride_size = 32;
     let diff_stride = (file_len - stride_size as u64) / num_strides as u64;
@@ -110,11 +103,7 @@ pub fn extract_features_low_memory(file_path: &str) -> std::io::Result<PreAnalys
     })
 }
 
-/// Computes a deterministic complexity index based on spatial, temporal, and luma features.
 pub fn calculate_complexity_index(s: f64, t: f64, l: f64) -> f64 {
-    // Spatial energy (s) and Temporal energy (t) represent detail and motion.
-    // Luma brightness (l) indicates contrast.
-    // We scale the index from 0.0 to 10.0.
     let index = 10.0 * (s * 0.6 + t * 0.3 + l * 0.1);
     index.clamp(0.0, 10.0)
 }

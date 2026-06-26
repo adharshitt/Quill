@@ -1,4 +1,4 @@
-# Quill 🖋️
+# Quill
 
 Quill is an optimized, resource-aware, multi-module video transcoding engine written in Rust, paired with an interactive Terminal User Interface (TUI) wrapper. It performs spatial-temporal video telemetry analysis using a lightweight Discrete Cosine Transform (DCT) pre-scan, forecasts encoding complexity, dynamically maps thread limits to ensure memory safety (OOM prevention), and calculates optimal target bitrates to achieve high compression ratios without visual quality starvation.
 
@@ -61,7 +61,7 @@ quill path/to/video.mp4
 ```
 
 ### Supported Compression Methods
-1.  **🆕 Our Optimized Rust Wrapper**: 10-bit AV1, RAM-safe, proportional bitrate.
+1.  **Quill AD01**: 10-bit AV1, RAM-safe, proportional bitrate.
 2.  **Default AV1**: Clean CPU-based SVT-AV1 (lp=4, Preset 10).
 3.  **Default H.264**: Standard libx264 fast CPU compression.
 4.  **Tool-Optimized AV1 (CRF 30)**: Target CRF-based high-quality AV1 encoding.

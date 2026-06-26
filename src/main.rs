@@ -112,10 +112,10 @@ fn main() {
     };
     let input_size = input_metadata.len();
 
-    println!("===============================================================");
-    println!("=== Rust Multi-Module AV1 Optimizer: Telemetry Scan ===");
-    println!("===============================================================");
-    println!("[Pre-Scan] Reading spatial/temporal features from: {}", input_path);
+    println!(" ");
+    println!(" Quill AD01 Optimizer: Telemetry scan");
+    println!(" ");
+    println!("Analyzing spatial features from: {}", input_path);
 
     let start_scan = Instant::now();
     let features = match telemetry::extract_features_low_memory(&input_path) {
@@ -154,8 +154,8 @@ fn main() {
         format!("{} MB", task.system_ram_mb)
     };
     
-    println!("{:<14} | Logical Cores : {} threads", "[Host System]", task.num_cpus);
-    println!("{:<14} | Detected RAM  : {}", "[Host System]", ram_string);
+    println!("{:<14} | Logical Cores : {} threads", "Machine", task.num_cpus);
+    println!("{:<14} | Detected RAM  : {}", "Machine", ram_string);
 
     // 3. Video Metadata
     println!("{:<14} | Duration      : {:.2} seconds", "[Video Info]", task.video_duration);
